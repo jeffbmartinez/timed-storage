@@ -1,7 +1,6 @@
 package timedstore
 
 import (
-  "time"
   "container/list"
 )
 
@@ -9,7 +8,9 @@ type Key interface {}
 
 type Store map[Key]list.List
 
-// Returns all active values stored by the key
+// Returns all active values stored by the key. Also cleans expired
+// Values. Values are considered expired if the current time is greater
+// than or equal the value's end time.
 func (s Store) Get(k Key) (activeValues *list.List, ok bool) {
   values, ok := s[k]
 
@@ -17,15 +18,16 @@ func (s Store) Get(k Key) (activeValues *list.List, ok bool) {
     activeValues = list.New()
     expiredValues := list.New()
 
-    currentTime := time.Now().UTC().Unix()
+    currentTime := CurrentTime()
 
-    for element := values.Front() ; element != nil ; element = element.Next() {
-      value, ok := element.Value.(Value)
-      if ok {
+    for element := values.Front() ; element != nil ; element = element.Next() {      
+      if value, ok := element.Value.(Value) ; ok {
         if value.IsActiveForTime(currentTime) {
           activeValues.PushBack(value.Data)
         } else if value.IsExpiredForTime(currentTime) {
-          expiredValues.PushBack(element) // Keep track of values to be removed
+          // Keep track of list elements to remove later. They cannot be removed
+          // during iteration.
+          expiredValues.PushBack(element)
         }
       }
     }
@@ -44,7 +46,10 @@ func (s Store) Get(k Key) (activeValues *list.List, ok bool) {
   return
 }
 
-// Adds a new value behind a key
+// Adds a new value behind a key. This does not replace an existing value,
+// it adds to a list of stored values.
 func (s Store) Put(k Key, v Value) {
-  
+  values := s[k]
+  values.PushBack(v)
+  s[k] = values
 }

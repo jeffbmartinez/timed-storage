@@ -2,14 +2,12 @@ package timedstore
 
 import (
   "testing"
-
-  "time"
 )
 
 func TestNewValue(t *testing.T) {
   const expectedDuration = 10
 
-  start := time.Now().UTC().Unix()
+  start := CurrentTime()
   end := start + expectedDuration
 
   value := NewValue("my value", start, end)
@@ -22,7 +20,7 @@ func TestNewValue(t *testing.T) {
 func TestNewValueFromDuration(t *testing.T) {
   const duration = 10
 
-  now := time.Now().UTC().Unix()
+  now := CurrentTime()
   expectedEndSeconds := now + duration
 
   value := NewValueFromDuration("my value", now, duration)
