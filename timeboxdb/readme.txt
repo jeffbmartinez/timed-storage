@@ -1,6 +1,6 @@
-A key value storage system which can store multiple values per key, along with an active time for each value.
+A key value storage system which can store multiple values per key, along with a timebox for which each value is considered active.
 
-The Get call, when supplied a key, returns all values for which the active time is now.
+The Get call, when supplied a key, returns all values for which associated values are active. In other words, the values for which the associated time box is surrounding the current time (or another time, if provided).
 
 ~~~ API - json ~~~
 
