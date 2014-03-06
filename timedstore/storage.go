@@ -34,11 +34,11 @@ func (s Store) Get(k Key) (activeValues *list.List, ok bool) {
 
     // Go back and remove any elements that are expired. These can never become
     // active again so they are removed from storage
-    for element := values.Front() ; element != nil ; element = element.Next() {
+    for element := expiredValues.Front() ; element != nil ; element = element.Next() {
       expiredElement, ok := element.Value.(*list.Element)
 
       if ok {
-        values.Remove(expiredElement)
+        expiredValues.Remove(expiredElement)
       }
     }
   }
