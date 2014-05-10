@@ -1,5 +1,9 @@
 package timedstore
 
+import (
+  "strconv"
+)
+
 // This is the struct used to internally represent Value objects, which are
 // only active during a given time range. The start time and end time are both
 // provided in seconds since January 1, 1970, also known as unix time or epoch
@@ -10,6 +14,25 @@ type Value struct {
   StartSeconds int64
   EndSeconds int64
 }
+
+func (v Value) String() string {
+  dataAsString, ok := v.Data.(string)
+
+  if !ok {
+    dataAsString = "[unknown string representation]"
+  }
+
+  return "{\"" + dataAsString + "\", " + strconv.FormatInt(v.StartSeconds, 10) + ", " + strconv.FormatInt(v.EndSeconds, 10) + "}"
+}
+
+func (v Value) GoString() string {
+  return v.String()
+}
+
+// Represents a value stored without a timebox constraint. You can only have one of these
+// per key. If there is no active timeboxed value, this value is returned, if it exists
+// for the key.
+type DefaultValue interface{}
 
 // Creates a new Value given a start time and end time. Times are provided in
 // seconds since January 1, 1970 UTC (unix/epoch time)

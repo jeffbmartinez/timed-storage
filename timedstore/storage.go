@@ -2,6 +2,7 @@ package timedstore
 
 import (
   "container/list"
+  "fmt"
 )
 
 type Key interface {}
@@ -14,9 +15,12 @@ type Store map[Key]list.List
 func (s Store) Get(k Key) (activeValues *list.List, ok bool) {
   values, ok := s[k]
 
+  fmt.Printf("s[k]:\n\t%v\n", s[k])
+  fmt.Printf("List:\n\t%v\n", values)
+
   if ok {
     activeValues = list.New()
-    expiredValues := list.New()
+    expiredElements := make([]*list.Element, 0, 10)
 
     currentTime := CurrentTime()
 
@@ -27,20 +31,25 @@ func (s Store) Get(k Key) (activeValues *list.List, ok bool) {
         } else if value.IsExpiredForTime(currentTime) {
           // Keep track of list elements to remove later. They cannot be removed
           // during iteration.
-          expiredValues.PushBack(element)
+          //expiredElements = append(expiredElements, element)
+          //values.MoveToFront(element)
+          fmt.Printf("Added to expiredElements:\n\t%v\n", element)
         }
       }
     }
 
+    fmt.Printf("expiredElements length: %v\n", len(expiredElements))
+
     // Go back and remove any elements that are expired. These can never become
     // active again so they are removed from storage
-    for element := expiredValues.Front() ; element != nil ; element = element.Next() {
-      expiredElement, ok := element.Value.(*list.Element)
-
-      if ok {
-        expiredValues.Remove(expiredElement)
-      }
+    for i := 0 ; i < len(expiredElements) ; i++ {
+      value := values.Front()
+      fmt.Printf("Expired element removed:\n\t%v\n", value)
+      //values.MoveToFront(element)
+      values.Remove(value)
     }
+
+    s[k] = values
   }
 
   return
