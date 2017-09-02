@@ -45,18 +45,18 @@ func (s Store) RemoveExpiredForTime(k Key, t int64) []Value {
 		return []Value{}
 	}
 
-	activeValues := []Value{}
 	expiredValues := []Value{}
+	nonExpiredValues := []Value{}
 
 	for _, value := range values {
-		if value.IsActiveForTime(t) {
-			activeValues = append(activeValues, value)
-		} else {
+		if value.IsExpiredForTime(t) {
 			expiredValues = append(expiredValues, value)
+		} else {
+			nonExpiredValues = append(nonExpiredValues, value)
 		}
 	}
 
-	s[k] = activeValues
+	s[k] = nonExpiredValues
 
 	return expiredValues
 }
