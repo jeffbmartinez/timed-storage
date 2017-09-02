@@ -1,6 +1,7 @@
 package timedstore
 
 import (
+	"math"
 	"testing"
 )
 
@@ -14,6 +15,13 @@ func TestNewValue(t *testing.T) {
 
 	if value.Duration() != expectedDuration {
 		t.Errorf("Value duration is %d, expected %d", value.Duration(), expectedDuration)
+	}
+}
+
+func TestNewEternalValue(t *testing.T) {
+	eternal := NewEternalValue("always-active")
+	if eternal.Duration() != math.MaxUint64 {
+		t.Errorf("Eternal value duration is wrong. Expected '%d'. Got '%d'", uint64(math.MaxUint64), eternal.Duration())
 	}
 }
 
@@ -63,6 +71,12 @@ func TestIsActiveForTime(t *testing.T) {
 	if value2.IsActiveForTime(timeInactiveTooHigh) != false {
 		t.Errorf("value2.IsActiveForTime did not return expected truth value")
 	}
+
+	eternal := NewEternalValue("eternal")
+
+	if !eternal.IsActiveForTime(100) {
+		t.Errorf("Eternal values should always be active")
+	}
 }
 
 func TestExpiredForTime(t *testing.T) {
@@ -83,5 +97,11 @@ func TestExpiredForTime(t *testing.T) {
 
 	if value.IsExpiredForTime(timeToCheckNotExpired) {
 		t.Errorf("Did not expect value to be expired")
+	}
+
+	eternal := NewEternalValue("eternal")
+
+	if eternal.IsExpiredForTime(100) {
+		t.Errorf("Eternal values should never be expired")
 	}
 }
