@@ -1,55 +1,70 @@
 package timedstore
 
-import (
-  "container/list"
-)
+type Key interface{}
 
-type Key interface {}
+type Store map[Key][]Value
 
-type Store map[Key]list.List
+/* Returns all active values stored by the key and the provided time. Values are
+considered expired (not active) if the specified time is greater than or equal to the value's
+end time.
 
-// Returns all active values stored by the key. Also cleans expired
-// Values. Values are considered expired if the current time is greater
-// than or equal the value's end time.
-func (s Store) Get(k Key) (activeValues *list.List, ok bool) {
-  values, ok := s[k]
+t is in seconds since January 1, 1970 UTC (unix/epoch time)
 
-  if ok {
-    activeValues = list.New()
-    expiredValues := list.New()
+If the key is invalid, an empty list is still returned.
+*/
+func (s Store) GetActive(k Key, t int64) (activeValues []Value) {
+	values, ok := s[k]
+	if !ok {
+		return
+	}
 
-    currentTime := CurrentTime()
+	for _, value := range values {
+		if value.IsActiveForTime(t) {
+			activeValues = append(activeValues, value)
+		}
+	}
 
-    for element := values.Front() ; element != nil ; element = element.Next() {      
-      if value, ok := element.Value.(Value) ; ok {
-        if value.IsActiveForTime(currentTime) {
-          activeValues.PushBack(value.Data)
-        } else if value.IsExpiredForTime(currentTime) {
-          // Keep track of list elements to remove later. They cannot be removed
-          // during iteration.
-          expiredValues.PushBack(element)
-        }
-      }
-    }
-
-    // Go back and remove any elements that are expired. These can never become
-    // active again so they are removed from storage
-    for element := expiredValues.Front() ; element != nil ; element = element.Next() {
-      expiredElement, ok := element.Value.(*list.Element)
-
-      if ok {
-        expiredValues.Remove(expiredElement)
-      }
-    }
-  }
-
-  return
+	return
 }
 
-// Adds a new value behind a key. This does not replace an existing value,
+// Same as GetActive using the current time as the time.
+func (s Store) GetActiveNow(k Key) (activeValues []Value) {
+	currentTime := CurrentTime()
+	return s.GetActive(k, currentTime)
+}
+
+/* Remove all values that are expired for a given key and time. Expired values
+are ones that have an end time greater than or equal to the provided time.
+
+Returns a slice of Values that were expired and removed, if any.
+If the key does not exist nothing is done and an empty slice is returned.
+*/
+func (s Store) RemoveExpiredForTime(k Key, t int64) []Value {
+	values, ok := s[k]
+	if !ok {
+		return []Value{}
+	}
+
+	activeValues := []Value{}
+	expiredValues := []Value{}
+
+	for _, value := range values {
+		if value.IsActiveForTime(t) {
+			activeValues = append(activeValues, value)
+		} else {
+			expiredValues = append(expiredValues, value)
+		}
+	}
+
+	s[k] = activeValues
+
+	return expiredValues
+}
+
+// Adds a new Value behind a key. This does not replace an existing value,
 // it adds to a list of stored values.
 func (s Store) Put(k Key, v Value) {
-  values := s[k]
-  values.PushBack(v)
-  s[k] = values
+	values := s[k]
+	values = append(values, v)
+	s[k] = values
 }
