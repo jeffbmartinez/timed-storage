@@ -11,7 +11,7 @@ func TestNewValue(t *testing.T) {
 	start := CurrentTime()
 	end := start + expectedDuration
 
-	value := NewValue("my value", start, end)
+	value := NewValue(start, end, "my value")
 
 	if value.Duration() != expectedDuration {
 		t.Errorf("Value duration is %d, expected %d", value.Duration(), expectedDuration)
@@ -31,7 +31,7 @@ func TestNewValueFromDuration(t *testing.T) {
 	now := CurrentTime()
 	expectedEndSeconds := now + duration
 
-	value := NewValueFromDuration("my value", now, duration)
+	value := NewValueFromDuration(now, duration, "my value")
 	if value.EndSeconds != expectedEndSeconds {
 		t.Errorf("Value end time is %d, expected %d", value.EndSeconds, expectedEndSeconds)
 	}
@@ -46,7 +46,7 @@ func TestIsActiveForTime(t *testing.T) {
 	const timeInactiveTooLow = 10
 	const timeInactiveTooHigh = 10000000
 
-	value := NewValue("my value", startTime, endTime)
+	value := NewValue(startTime, endTime, "my value")
 	if value.IsActiveForTime(timeToCheckActive) != true {
 		t.Errorf("1: value.IsActiveForTime did not return expected truth value")
 	}
@@ -59,7 +59,7 @@ func TestIsActiveForTime(t *testing.T) {
 		t.Errorf("1: value.IsActiveForTime did not return expected truth value")
 	}
 
-	value2 := NewValueFromDuration("my value", startTime, duration)
+	value2 := NewValueFromDuration(startTime, duration, "my value")
 	if value2.IsActiveForTime(timeToCheckActive) != true {
 		t.Errorf("value2.IsActiveForTime did not return expected truth value")
 	}
@@ -86,7 +86,7 @@ func TestExpiredForTime(t *testing.T) {
 	const timeToCheckExpired = endTime + 100
 	const timeToCheckNotExpired = startTime - 100
 
-	value := NewValue("my value", startTime, endTime)
+	value := NewValue(startTime, endTime, "my value")
 	if !value.IsExpiredForTime(timeToCheckExpired) {
 		t.Errorf("Expected value to be expired, but was not")
 	}

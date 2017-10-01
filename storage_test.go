@@ -5,7 +5,7 @@ import (
 )
 
 func TestEmptyStore(t *testing.T) {
-	store := &Store{}
+	store := NewStore()
 
 	if values := store.GetActiveNow("doesn't exist"); len(values) > 0 {
 		t.Errorf("Empty Store should empty list of values but didn't. Returned %v as value", values)
@@ -13,7 +13,7 @@ func TestEmptyStore(t *testing.T) {
 }
 
 func TestBasicStorage1(t *testing.T) {
-	store := &Store{}
+	store := NewStore()
 
 	currentTime := CurrentTime()
 	const oneHour = 60 * 60
@@ -22,9 +22,9 @@ func TestBasicStorage1(t *testing.T) {
 	const string2 = "data2"
 	const string3 = "data3"
 
-	value1 := NewValue(string1, currentTime, currentTime+oneHour)
-	value2 := NewValue(string2, currentTime-oneHour, currentTime+2*oneHour)
-	value3 := NewValue(string3, currentTime+oneHour, currentTime+2*oneHour)
+	value1 := NewValue(currentTime, currentTime+oneHour, string1)
+	value2 := NewValue(currentTime-oneHour, currentTime+2*oneHour, string2)
+	value3 := NewValue(currentTime+oneHour, currentTime+2*oneHour, string3)
 
 	store.Put("one", value1)
 	store.Put("one", value2)
@@ -53,7 +53,7 @@ func TestBasicStorage1(t *testing.T) {
 }
 
 func TestBasicStorage2(t *testing.T) {
-	store := &Store{}
+	store := NewStore()
 
 	const timeBefore = 100
 	const timeEventStart = 200
@@ -64,7 +64,7 @@ func TestBasicStorage2(t *testing.T) {
 	const key = "key"
 	const value = "value"
 
-	store.Put(key, NewValue(value, timeEventStart, timeEventEnd))
+	store.Put(key, NewValue(timeEventStart, timeEventEnd, value))
 
 	if values := store.GetActive(key, timeBefore); len(values) != 0 {
 		t.Errorf("Expected zero values returned. Got '%v'", values)
@@ -80,16 +80,16 @@ func TestBasicStorage2(t *testing.T) {
 }
 
 func TestBasicStorage3(t *testing.T) {
-	store := Store{}
+	store := NewStore()
 
 	const key = "key"
 	const value1 = "value1"
 	const value2 = "value2"
 	const value3 = "value3"
 
-	store.Put(key, NewValue(value1, 100, 400))
-	store.Put(key, NewValue(value2, 200, 500))
-	store.Put(key, NewValue(value3, 300, 600))
+	store.Put(key, NewValue(100, 400, value1))
+	store.Put(key, NewValue(200, 500, value2))
+	store.Put(key, NewValue(300, 600, value3))
 
 	if values := store.GetActive(key, 350); len(values) != 3 {
 		t.Errorf("Expected exactly 3 values. Got %v: '%v'", len(values), values)
@@ -121,10 +121,10 @@ func TestBasicStorage3(t *testing.T) {
 }
 
 func TestEternalValueStorage(t *testing.T) {
-	store := Store{}
+	store := NewStore()
 
 	const key = "key"
-	value := NewValue("value", 100, 200)
+	value := NewValue(100, 200, "value")
 	eternal := NewEternalValue("eternal")
 
 	store.Put(key, value)
@@ -144,14 +144,14 @@ func TestEternalValueStorage(t *testing.T) {
 }
 
 func TestRemovingExpired(t *testing.T) {
-	store := &Store{}
+	store := NewStore()
 
 	const key = "key"
 	const value1 = "value1"
 	const value2 = "value2"
 
-	store.Put(key, NewValue(value1, 200, 300))
-	store.Put(key, NewValue(value2, 800, 900))
+	store.Put(key, NewValue(200, 300, value1))
+	store.Put(key, NewValue(800, 900, value2))
 
 	if values := store.GetActive(key, 250); len(values) != 1 {
 		t.Errorf("Expected exactly 1 value. Got %v: '%v'", len(values), values)

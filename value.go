@@ -3,6 +3,8 @@ package timedstore
 import (
 	"math"
 	"math/big"
+
+	"github.com/satori/go.uuid"
 )
 
 // Value is the struct used to internally represent Value objects, which are
@@ -10,31 +12,34 @@ import (
 // provided in seconds since January 1, 1970, also known as unix time or epoch
 // time.
 type Value struct {
-	Data interface{}
+	uniqueID string
 
 	StartSeconds int64
 	EndSeconds   int64
+
+	Data interface{}
 }
 
 // NewValue creates a new Value given a start time and end time. Times are provided in
 // seconds since January 1, 1970 UTC (unix/epoch time)
-func NewValue(data interface{}, startSeconds int64, endSeconds int64) Value {
-	return Value{data, startSeconds, endSeconds}
+func NewValue(startSeconds int64, endSeconds int64, data interface{}) Value {
+	uniqueID := uuid.NewV4().String()
+	return Value{uniqueID, startSeconds, endSeconds, data}
 }
 
 // NewEternalValue creates a new Value with the minimum start time and maximum
 // end time. Except for the case where time t = math.MaxInt64, an eternal value
 // will never expire and will always be active.
 func NewEternalValue(data interface{}) Value {
-	return Value{data, math.MinInt64, math.MaxInt64}
+	return NewValue(math.MinInt64, math.MaxInt64, data)
 }
 
 // NewValueFromDuration creates a new Value given a start time and a duration.
 // Start time is provided in seconds since January 1, 1970 UTC (unix/epoch time).
 // Duration is also in seconds.
-func NewValueFromDuration(data interface{}, startSeconds int64, duration int64) Value {
+func NewValueFromDuration(startSeconds int64, duration int64, data interface{}) Value {
 	endSeconds := startSeconds + duration
-	return NewValue(data, startSeconds, endSeconds)
+	return NewValue(startSeconds, endSeconds, data)
 }
 
 // Duration returns the duration of this value in seconds. Calculated by
@@ -59,4 +64,9 @@ func (v Value) IsActiveForTime(time int64) bool {
 // expired.
 func (v Value) IsExpiredForTime(time int64) bool {
 	return time >= v.EndSeconds
+}
+
+// GetUniqueID returns the unique id supplied at the object's creation time.
+func (v Value) GetUniqueID() string {
+	return v.uniqueID
 }
